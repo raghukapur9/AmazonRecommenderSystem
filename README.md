@@ -11,7 +11,7 @@
 - Dataset has 6,739,590 reviews in total
 - Dataset size is 3.9 GB
 - Data is present in csv format and the schema for each row is as follow
-
+```
 {
   "overall": 5,
   "vote": "67",
@@ -27,23 +27,24 @@
   "summary": "A star is born",
   "unixReviewTime": 937612800
 }
-
+```
 
 
 - The data fields are as follow
-| Field Name        | Data Type       | Description     |
-| :----             | :----           | :----         |
-| overall           | int             | Review rating given by the user        |
-| vote              | string          | No. of votes given to the review        |
-| verified          | boolean         | If the user has actually bought the product        |
-| reviewTime        | string          | Time when the review was created        |
-| reviewerID        | string          | ID of the reviewer        |
-| asin              | string          | Unique identifier of the product        |
-| style             | dictionary      | A dictionary of the product’s metadata        |
-| reviewerName      | string          | Name of the reviewer        |
-| reviewText        | string          | Details of the review        |
-| unixReviewTime    | int             | Unix timestamp for the review        |
-| summary           | string          | Summary of the review        |
+
+    | Field Name        | Data Type       | Description                                     |
+    | :----             | :----           | :----                                           |
+    | overall           | int             | Review rating given by the user                 |
+    | vote              | string          | No. of votes given to the review                |
+    | verified          | boolean         | If the user has actually bought the product     |
+    | reviewTime        | string          | Time when the review was created                |
+    | reviewerID        | string          | ID of the reviewer                              |
+    | asin              | string          | Unique identifier of the product                |
+    | style             | dictionary      | A dictionary of the product’s metadata          |
+    | reviewerName      | string          | Name of the reviewer                            |
+    | reviewText        | string          | Details of the review                           |
+    | unixReviewTime    | int             | Unix timestamp for the review                   |
+    | summary           | string          | Summary of the review                           |
 
 
 - Important fields to be kept for creating the sentiment analysis Model

@@ -31,7 +31,7 @@ def main(inputs, output):
     subreddit.map(output_format).saveAsTextFile(output)
 
 if __name__ == '__main__':
-    conf = SparkConf().setAppName('reddit averages')
+    conf = SparkConf().setAppName('review data split')
     sc = SparkContext(conf=conf)
     sc.setLogLevel('WARN')
     assert sc.version >= '3.0'  # make sure we have Spark 3.0+

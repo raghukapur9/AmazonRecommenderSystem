@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.NGram","timestamp":1669545349107,"sparkVersion":"3.3.0-amzn-0","uid":"NGram_cd8965ddfcd3","paramMap":{"inputCol":"tokenised_text_without_stop_words","n":2,"outputCol":"nGrams"},"defaultParamMap":{"n":2,"outputCol":"NGram_cd8965ddfcd3__output"}}

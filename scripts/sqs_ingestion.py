@@ -68,18 +68,25 @@ def delete_queue_message(queue_url, receipt_handle):
 def main():
     queue_url = get_queue_url()
     logger.info(f'Queue URL - {queue_url}')
-    messages = receive_queue_message(queue_url)
-    print(messages)
-    '''
-    {'Messages': [{'MessageId': '71eec6f2-d2e9-42c5-9c5b-0a38ae82a9d1', 'ReceiptHandle': 'AQEB/b/', 'MD5OfBody': '2079d7bcda3672e0f0951bcf774c0254', 'Body': 'Learn how to create, receive, delete and modify SQS queues and see the other functions available within the AWS.'}], 'ResponseMetadata': {'RequestId': '80bd5718-41a4-5a7f-9ac1-0b1a3f8109ed', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': '80bd5718-41a4-5a7f-9ac1-0b1a3f8109ed', 'date': 'Thu, 01 Dec 2022 10:03:17 GMT', 'content-type': 'text/xml', 'content-length': '963'}, 'RetryAttempts': 0}}
-    '''
-    for msg in messages['Messages']:
-        msg_body = msg['Body']
-        receipt_handle = msg['ReceiptHandle']
-        logger.info(f'The message body: {msg_body}')
-        #logger.info('Deleting message from the queue...')
-        #delete_queue_message(queue_url, receipt_handle)
-    logger.info(f'Received and message(s) not deleted from {queue_url}.')
+    try:
+        messages = receive_queue_message(queue_url)
+        while True:
+            if "Messages" not in messages:
+                break
+            for msg in messages['Messages']:
+                msg_body = msg['Body']
+                review_data = json.loads(msg_body)
+                receipt_handle = msg['ReceiptHandle']
+                logger.info(f'Review data: {review_data}')
+                logger.info(f'Receipt handle: {receipt_handle}')
+                logger.info('Deleting message from the queue...')
+                #delete_queue_message(queue_url, receipt_handle)
+            logger.info(f'Received and message(s) deleted from {queue_url}.')
+            messages = receive_queue_message(queue_url)
+    except ClientError:
+        logger.exception(
+            f'Could not process more messages from the - {queue_url}.')
+        raise
 
 if __name__=="__main__":
     start = timer()

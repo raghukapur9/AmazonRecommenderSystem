@@ -23,23 +23,10 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s: %(levelname)s: %(message)s')
 
 # # Create SQS client
-AWS_REGION = "us-west-2"
+AWS_REGION = 'us-west-2'
 sqs = boto3.client('sqs', region_name=AWS_REGION)
 max_queue_messages = 10
-'''
-CREATE TABLE collected_review_data (
-  reviewID int unsigned NOT NULL AUTO_INCREMENT,
-  asin varchar(10) NOT NULL,
-  name text NOT NULL,
-  category varchar(150) NOT NULL,
-  price float(4,2) NOT NULL,
-  reviewDate date NOT NULL,
-  rating float(2,1) NOT NULL,
-  reviewText text NOT NULL,
-  sentiment text,
-  PRIMARY KEY (reviewID)
-)
-'''
+QUEUE_NAME = 'review-data-queue'
 
 # insert MySQL Database information here
 HOST = 'localhost'
@@ -69,19 +56,14 @@ review_analysis_schema = types.StructType([
 def gen_random_string(): 
     # initializing size of string
     N = 7
-    
-    # using random.choices()
-    # generating random strings
+    # generating random strings using random.choices()
     res = ''.join(random.choices(string.ascii_uppercase +
                                 string.digits, k=N))
-    
-    # print result
-    print("The generated random string : " + str(res))
     return res
 
 def get_queue_url():
     # Get the queue. This returns an SQS.Queue instance
-    queue_url = sqs.get_queue_url(QueueName='review-data-queue')
+    queue_url = sqs.get_queue_url(QueueName=QUEUE_NAME)
     return queue_url['QueueUrl']
 
 def get_db():
@@ -108,25 +90,50 @@ def get_db_cursor(db_connection):
 # 'rating': 5, 
 # 'review_content': 'le son est bon, le blueooth fonctionne très bien, je vais en commander une deuxième !'}
 def insert_into_db(db_connection, db_cursor, review_data_list, predicted_sentiment_list):
-    for i in range(len(review_data_list)):
-        uid = review_data_list[i].get('uid')
-        asin = review_data_list[i].get('asin')
-        name = review_data_list[i].get('name')
-        category = review_data_list[i].get('category')
-        price = review_data_list[i].get('price')
-        #reviewDate = datetime.strptime(review_data.get('reviewDate'), '%Y-%m-%d')
-        reviewDate = review_data_list[i].get('timestamp')[:10]
-        #overall = float(review_data.get('overall'))
-        rating = review_data_list[i].get('rating')
-        reviewText = review_data_list[i].get('review_content')
-        sentiment = predicted_sentiment_list[uid]
+    """
+    Iterates over review-data and loads data into DB.
 
-        # insert each book as a row in MySQL
-        insert_cmd = f'INSERT INTO {TABLE_NAME} (asin, name, category, price, reviewDate, rating, reviewText, sentiment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
-        data = (asin, name, category, price, reviewDate, rating, reviewText, sentiment)
-        db_cursor.execute(insert_cmd, data)
-        db_connection.commit()
-        logger.info(f'[+] Inserted review data to DB for product: {name}(ASIN: {asin})')
+    DB Created with following schema:
+    CREATE TABLE collected_review_data (
+    reviewID int unsigned NOT NULL AUTO_INCREMENT,
+    asin varchar(10) NOT NULL,
+    name text NOT NULL,
+    category varchar(150) NOT NULL,
+    price float(4,2) NOT NULL,
+    reviewDate date NOT NULL,
+    rating float(2,1) NOT NULL,
+    reviewText text NOT NULL,
+    sentiment text,
+    PRIMARY KEY (reviewID)
+    )
+    """
+    try:
+        for i in range(len(review_data_list)):
+            uid = review_data_list[i].get('uid')
+            asin = review_data_list[i].get('asin')
+            name = review_data_list[i].get('name')
+            category = review_data_list[i].get('category')
+            price = review_data_list[i].get('price')
+            #reviewDate = datetime.strptime(review_data.get('reviewDate'), '%Y-%m-%d')
+            reviewDate = review_data_list[i].get('timestamp')[:10]
+            #overall = float(review_data.get('overall'))
+            rating = review_data_list[i].get('rating')
+            reviewText = review_data_list[i].get('review_content')
+            sentiment = predicted_sentiment_list[uid]
+
+            # insert each book as a row in MySQL
+            insert_cmd = f'INSERT INTO {TABLE_NAME} (asin, name, category, price, reviewDate, rating, reviewText, sentiment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+            data = (asin, name, category, price, reviewDate, rating, reviewText, sentiment)
+            db_cursor.execute(insert_cmd, data)
+            db_connection.commit()
+            logger.info(f'[+] Inserted review data to DB for product: {name}(ASIN: {asin})')
+        return True
+    except ClientError:
+        logger.exception(
+            f'Insertion of data to DB failed.')
+        raise
+    else:
+        return False
 
 def get_db_data(db_cursor):
     # fetch the database
@@ -179,15 +186,15 @@ def delete_queue_message(queue_url, receipt_handle):
         return response
 
 def create_analysis_df(reviewdata_list):
-    '''
-        Create dataframe with review data
-    '''
-    reviewdata_relevant_list = []
+    """
+    Create dataframe with review data
+    """
+    reviewdata_analysis_list = []
     for review_data in reviewdata_list:
-        reviewdata_relevant_list.append((float(review_data.get('rating')), review_data.get('review_content'), review_data.get('uid')))
+        reviewdata_analysis_list.append((float(review_data.get('rating')), review_data.get('review_content'), review_data.get('uid')))
     
-    data = spark.createDataFrame(reviewdata_relevant_list, review_analysis_schema)
-    return data
+    reviewdata_analysis_df = spark.createDataFrame(reviewdata_analysis_list, review_analysis_schema)
+    return reviewdata_analysis_df
 
 def remove_non_ascii_chars(review):
     return review.encode('ascii', 'ignore').decode('ascii')
@@ -247,7 +254,6 @@ def main(model):
     try:
         reviewdata_list = []
         receipt_handle_list = []
-        review_uid = {}
         messages = receive_queue_message(queue_url)
         while True:
             if "Messages" not in messages:
@@ -258,9 +264,9 @@ def main(model):
                 receipt_handle = msg['ReceiptHandle']
                 logger.info(f'Review data: {review_data}')
                 logger.info(f'Receipt handle: {receipt_handle}')
-                rand_str = gen_random_string()
-                review_uid[rand_str] = review_data
-                review_data['uid'] = rand_str
+                uid = gen_random_string()
+                logger.info(f'Generated UID: {str(uid)}')
+                review_data['uid'] = uid
                 reviewdata_list.append(review_data)
                 receipt_handle_list.append(receipt_handle)
             logger.info(f'Received message(s) from {queue_url}.')
@@ -272,8 +278,10 @@ def main(model):
 
     predicted_sentiment_list = analyze_review_sentiment(model, reviewdata_list)
     insert_into_db(db_connection, db_cursor, reviewdata_list, predicted_sentiment_list)
-    #logger.info('Deleting message from the queue...')
-    #delete_queue_message(queue_url, receipt_handle)
+    for receipt_handle in receipt_handle_list:
+        logger.info('Deleting message(s) from the queue...')
+        delete_queue_message(queue_url, receipt_handle)
+    logger.info('Message(s) deleted from queue')
     get_db_data(db_cursor)
     
     # close the cursor

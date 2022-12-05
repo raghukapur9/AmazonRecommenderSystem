@@ -6,7 +6,7 @@ from pyspark.sql.functions import expr, col, length
 from pyspark.ml import PipelineModel
 from pyspark.ml.evaluation import RegressionEvaluator
 from timeit import default_timer as timer
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import boto3
 from botocore.exceptions import ClientError
@@ -82,6 +82,13 @@ def get_db_cursor(db_connection):
     logger.info(f'[+] Database connection established with database {database_name}')
     return cursor
 
+def change_review_date(date, delta_days):
+    date_formatted = datetime.strptime(date, '%Y-%m-%d')
+    #print('Date formatted: ', date_formatted)
+    day_minus_3 = date_formatted - timedelta(days=delta_days)
+    #print('Date formatted - 3: ', str(day_minus_3)[:10])
+    return str(day_minus_3)
+
 # {'asin': 'B07SJTHHRB', 
 # 'name': 'JBL GO2 Ultra Portable Waterproof Wireless Bluetooth Speaker with up to 5 Hours of Battery Life - Blue', 
 # 'category': 'Electronics', 
@@ -99,7 +106,7 @@ def insert_into_db(db_connection, db_cursor, review_data_list, predicted_sentime
     asin varchar(10) NOT NULL,
     name text NOT NULL,
     category varchar(150) NOT NULL,
-    price float(4,2) NOT NULL,
+    price float(10,2) NOT NULL,
     reviewDate date NOT NULL,
     rating float(2,1) NOT NULL,
     reviewText text NOT NULL,
@@ -116,6 +123,7 @@ def insert_into_db(db_connection, db_cursor, review_data_list, predicted_sentime
             price = review_data_list[i].get('price')
             #reviewDate = datetime.strptime(review_data.get('reviewDate'), '%Y-%m-%d')
             reviewDate = review_data_list[i].get('timestamp')[:10]
+            #reviewDate = change_review_date(reviewDate, 3)[:10]
             #overall = float(review_data.get('overall'))
             rating = review_data_list[i].get('rating')
             reviewText = review_data_list[i].get('review_content')

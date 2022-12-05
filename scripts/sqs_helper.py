@@ -6,6 +6,11 @@ try:
 except Exception as e:
     print(e)
  
+#Add AWS Creds here
+AWS_ACCESS_KEY=""
+AWS_SECRET_KEY=""
+AWS_SQS_QUEUE_NAME = ""
+
 class SQSQueue(object):
  
     def __init__(self, queueName=None):

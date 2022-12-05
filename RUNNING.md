@@ -15,7 +15,7 @@ To install all the required libraries and dependencies, run the following comman
 
 ## Phase 2 - Training the model
 * Setup an EMR cluster to run a pyspark script (refer [Assignment 5](https://coursys.sfu.ca/2022fa-cmpt-732-g1/pages/Assign5))
-* Add your AWS_ACCESS_KEY, AWS_SECRET_KEY in <code>model_creation.py</code>.
+    ![EMR](/images/emr.jpg?raw=true  "EMR")
 * Run the <code>model_creation.py</code> file (to create a model based on the split training data) on the cluster with a suitable configuration as follows:
 
 	<code>spark-submit --deploy-mode cluster --conf spark.yarn.maxAppAttempts=1 s3://amazon-product-recommender/scripts/model_creation.py s3://amazon-product-recommender/ElectronicProductDataZIP/ s3://amazon-product-recommender/output</code>
@@ -24,7 +24,8 @@ To install all the required libraries and dependencies, run the following comman
 
 ## Phase 3 - Scraping Amazon data
 
-  
+* ![Lambda](/images/lambda.jpg?raw=true  "Lambda")
+* This script was run as an AWS lambda function. However, if required, it can be run locally as follows:
 * Firstly, add your AWS_ACCESS_KEY, AWS_SECRET_KEY and AWS_SQS_QUEUE_NAME in <code>scraper.py</code> after creating a queue in SQS.
 * Run the python scraper script with the below command :
 
@@ -35,7 +36,10 @@ To install all the required libraries and dependencies, run the following comman
 
 ## Phase 4 - Ingesting SQS message queue into DB
 
-* Initialize an EC2 instance and setup **MySQL Server**. Add these credentials to the <code>sentiment_analyzer.py</code> file
+* Initialize an EC2 instance and setup **MySQL Server**. Add the DB credentials to the <code>sentiment_analyzer.py</code> file
+
+    ![EC2](/images/ec2.jpg?raw=true  "EC2")
+* Add your AWS_ACCESS_KEY, AWS_SECRET_KEY and AWS_SQS_QUEUE_NAME to <code>sentiment_analyzer.py</code>
 * Run the <code>sentiment_analyzer.py</code> using the following command :
 
 	<code>python3 sentiment_analyzer.py  path_to_model</code>

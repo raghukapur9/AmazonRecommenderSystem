@@ -1,7 +1,7 @@
 # Amazon Recommender System
 
 ## Architecture Diagram
-![Architecture Diagram](/images/ArchitectureDiagram.jpeg?raw=true "Architecture Diagram")
+![Architecture Diagram](/images/Architecture_Diagram.jpeg?raw=true "Architecture Diagram")
 
 ## Problem Statement
 - Create a system which shows the trend of products using the reviews being scraped from the website.

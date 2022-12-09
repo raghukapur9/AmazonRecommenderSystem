@@ -10,7 +10,7 @@
 - Dataset link: https://nijianmo.github.io/amazon/index.html
 - Dataset has 6,739,590 reviews in total
 - Dataset size is 3.9 GB
-- Data is present in csv format and the schema for each row is as follow
+- Data is present in JSON format and the schema for each row is as follow
 ```
 {
   "overall": 5,

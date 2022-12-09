@@ -37,7 +37,6 @@ def main(sc, inputs, output):
     review_schema = get_observation_schema()
 
     ### Read inputs using command line arguments and create a df with the defined schema
-    # review_schema_df = spark.read.json(inputs, schema=review_schema)
     review_schema_df = spark.read.format("s3selectJSON").schema(review_schema).options(compression='gzip').load(inputs)
 
     review_schema_df = review_schema_df.filter(review_schema_df.reviewText.isNotNull())
@@ -53,7 +52,9 @@ def main(sc, inputs, output):
         "ELSE overall END").alias("sentiment")
     )
 
-    review_schema_df_with_sentiment = review_schema_df_with_sentiment.withColumn("length", length(review_schema_df_with_sentiment.processedReviewText))
+    review_schema_df_with_sentiment = review_schema_df_with_sentiment.withColumn(
+        "length", length(review_schema_df_with_sentiment.processedReviewText)
+    )
 
     (train, test) = review_schema_df_with_sentiment.randomSplit([0.8, 0.2])
 

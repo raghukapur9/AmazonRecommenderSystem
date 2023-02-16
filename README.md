@@ -1,5 +1,8 @@
 # Amazon Recommender System
 
+## Project Demo
+Short project demo on YouTube - https://youtu.be/o-0zD_6bGsM
+
 ## Architecture Diagram
 ![Architecture Diagram](/images/Architecture_Diagram.jpeg?raw=true "Architecture Diagram")
 
